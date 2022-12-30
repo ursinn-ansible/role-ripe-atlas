@@ -1,0 +1,56 @@
+---
+- name: Create ripe-atlas etc directory
+  ansible.builtin.file:
+    path: /var/atlas-probe/etc
+    state: directory
+
+- name: Create ripe-atlas status volume
+  community.docker.docker_volume:
+    name: ripe-atlas_status
+
+- name: Ensure jamesits/ripe-atlas image is pulled
+  community.docker.docker_image:
+    name: docker.io/jamesits/ripe-atlas
+    source: pull
+    force_source: yes
+  register: pulled
+
+- name: Remove ripe-atlas container
+  community.docker.docker_container:
+    name: ripe-atlas
+    state: absent
+  when: pulled.changed
+
+- name: Get infos on ripe-atlas container
+  community.docker.docker_container_info:
+    name: ripe-atlas
+  register: result
+
+- name: Create ripe-atlas container
+  community.docker.docker_container:
+    image: docker.io/jamesits/ripe-atlas
+    env:
+      "RXTXRPT": "yes"
+    memory: 64m
+    memory_reservation: 64m
+    mounts:
+      - source: /var/atlas-probe/etc
+        target: /var/atlas-probe/etc
+        type: bind
+      - source: ripe-atlas_status
+        target: /var/atlas-probe/status
+    cap_drop:
+      - all
+    capabilities:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - DAC_OVERRIDE
+      - NET_RAW
+    name: ripe-atlas
+    restart_policy: unless-stopped
+    state: started
+  when:
+    pulled.changed
+    or
+    result.exists == false
