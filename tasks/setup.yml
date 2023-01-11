@@ -10,7 +10,7 @@
 
 - name: Ensure jamesits/ripe-atlas image is pulled
   community.docker.docker_image:
-    name: docker.io/jamesits/ripe-atlas
+    name: docker.io/as202427/ripe-atlas
     source: pull
     force_source: yes
   register: pulled
@@ -28,7 +28,7 @@
 
 - name: Create ripe-atlas container
   community.docker.docker_container:
-    image: docker.io/jamesits/ripe-atlas
+    image: docker.io/as202427/ripe-atlas
     env:
       "RXTXRPT": "yes"
     memory: 64m
