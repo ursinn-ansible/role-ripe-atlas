@@ -8,7 +8,7 @@
   community.docker.docker_volume:
     name: ripe-atlas_status
 
-- name: Ensure jamesits/ripe-atlas image is pulled
+- name: Ensure as202427/ripe-atlas image is pulled
   community.docker.docker_image:
     name: docker.io/as202427/ripe-atlas
     source: pull
