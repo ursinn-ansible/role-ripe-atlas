@@ -1,4 +1,10 @@
 ---
+- name: set vars
+  set_fact:
+    docker_image: docker.io/as202427/ripe-atlas
+    docker_container: ripe-atlas
+    docker_volume: ripe-atlas_status
+
 - name: Create ripe-atlas etc directory
   ansible.builtin.file:
     path: /var/atlas-probe/etc
@@ -6,29 +12,29 @@
 
 - name: Create ripe-atlas status volume
   community.docker.docker_volume:
-    name: ripe-atlas_status
+    name: '{{ docker_volume }}'
 
-- name: Ensure as202427/ripe-atlas image is pulled
+- name: Ensure image is pulled
   community.docker.docker_image:
-    name: docker.io/as202427/ripe-atlas
+    name: "{{ docker_image }}"
     source: pull
     force_source: yes
   register: pulled
 
-- name: Remove ripe-atlas container
+- name: Remove container
   community.docker.docker_container:
-    name: ripe-atlas
+    name: "{{ docker_container }}"
     state: absent
   when: pulled.changed
 
-- name: Get infos on ripe-atlas container
+- name: Get infos on container
   community.docker.docker_container_info:
-    name: ripe-atlas
+    name: "{{ docker_container }}"
   register: result
 
 - name: Create ripe-atlas container
   community.docker.docker_container:
-    image: docker.io/as202427/ripe-atlas
+    image: '{{ docker_image }}'
     env:
       "RXTXRPT": "yes"
     memory: 64m
@@ -37,7 +43,7 @@
       - source: /var/atlas-probe/etc
         target: /var/atlas-probe/etc
         type: bind
-      - source: ripe-atlas_status
+      - source: '{{ docker_volume }}'
         target: /var/atlas-probe/status
     cap_drop:
       - all
