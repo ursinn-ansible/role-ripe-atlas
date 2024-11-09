@@ -1,0 +1,4 @@
+---
+role_ripe_atlas_image: 'docker.io/as202427/ripe-atlas'
+role_ripe_atlas_container: 'ripe-atlas'
+role_ripe_atlas_volume: 'ripe-atlas'
