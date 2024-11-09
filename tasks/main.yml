@@ -1,18 +1,10 @@
 ---
 - name: set vars
   set_fact:
-    docker_image: docker.io/as202427/ripe-atlas
-    docker_container: ripe-atlas
-    docker_volume: ripe-atlas_status
-
-- name: Create ripe-atlas etc directory
-  ansible.builtin.file:
-    path: /var/atlas-probe/etc
-    state: directory
-
-- name: Create ripe-atlas status volume
-  community.docker.docker_volume:
-    name: '{{ docker_volume }}'
+    docker_image: '{{ role_ripe_atlas_image }}'
+    docker_container: '{{ role_ripe_atlas_container }}'
+    docker_volume_config: '{{ role_ripe_atlas_volume }}_config'
+    docker_volume_data: '{{ role_ripe_atlas_volume }}_data'
 
 - name: Ensure image is pulled
   community.docker.docker_image:
@@ -32,6 +24,14 @@
     name: "{{ docker_container }}"
   register: result
 
+- name: Create config volume
+  community.docker.docker_volume:
+    name: "{{ docker_volume_config }}"
+
+- name: Create data volume
+  community.docker.docker_volume:
+    name: "{{ docker_volume_data }}"
+
 - name: Create ripe-atlas container
   community.docker.docker_container:
     image: '{{ docker_image }}'
@@ -39,12 +39,9 @@
       "RXTXRPT": "yes"
     memory: 64m
     memory_reservation: 64m
-    mounts:
-      - source: /var/atlas-probe/etc
-        target: /var/atlas-probe/etc
-        type: bind
-      - source: '{{ docker_volume }}'
-        target: /var/atlas-probe/status
+    volumes:
+     - '{{ docker_volume_config }}:/var/atlas-probe/etc:Z'
+     - '{{ docker_volume_data }}:/var/atlas-probe/status:Z'
     cap_drop:
       - all
     capabilities:
@@ -53,7 +50,7 @@
       - SETGID
       - DAC_OVERRIDE
       - NET_RAW
-    name: ripe-atlas
+    name: '{{ docker_container }}'
     restart_policy: unless-stopped
     state: started
   when:
